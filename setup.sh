@@ -28,6 +28,8 @@ run() {
     fi
 }
 
+# FIRST PART STARTS HERE (Do not remove anything before parenthesis)
+
 comment Load german keyboard layout
 run loadkeys de-latin1
 
@@ -129,3 +131,26 @@ run btrfs subvolume create /mnt/var/tmp
 comment Mount EFI volume
 run mkdir -p /mnt/boot/efi
 run mount "${DEVICE}1" /mnt/boot/efi
+
+comment Run pacstrap
+run pacstrap /mnt base btrfs-progs efibootmgr grub-efi-x86_64
+
+comment Generate /etc/fstab
+echo "# $(tput setaf 6)genfstab -U /mnt >> /mnt/etc/fstab$(tput sgr0)"
+genfstab -U /mnt >> /mnt/etc/fstab
+code=$?
+if (( code > 0 ))
+then
+    fail "The following command executed with error $code:"
+    fail "genfstab -U /mnt >> /mnt/etc/fstab"
+    exit $code
+fi
+
+comment System is set up
+sed '/^# FIRST PART STARTS HERE$/,/^# FIRST PART ENDS HERE/d' "$0" > /mnt/setup.sh
+chmod +x /mnt/setup.sh
+
+comment Please run "arch-chroot /mnt" and then "/setup.sh"
+
+# FIRST PART ENDS HERE (Do not remove anything before parenthesis)
+comment Running second part of setup inside chroot
