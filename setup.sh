@@ -77,6 +77,9 @@ run gdisk -l "$DEVICE"
 echo -n "Enter to continue..."
 read
 
+comment Format "${DEVICE}1" with FAT32
+mkfs.fat -F32 "${DEVICE}1"
+
 comment Format "${DEVICE}2" with LUKS and open it
 run cryptsetup luksFormat "${DEVICE}2"
 run cryptsetup open --type luks "${DEVICE}2" "$CRYPTSETUP_NAME"
