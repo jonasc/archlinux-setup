@@ -64,7 +64,7 @@ then
     exit 1
 fi
 
-comment "This is the partition setup. Please check.
+comment This is the partition setup. Please check.
 run gdisk -l "$DEVICE"
 echo -n "Enter to continue..."
 read
