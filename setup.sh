@@ -70,8 +70,8 @@ echo -n "Enter to continue..."
 read
 
 comment Format "${DEVICE}2" with LUKS and open it
-cryptsetup luksFormat "${DEVICE}2"
-cryptsetup open --type luks "${DEVICE}2" "$CRYPTSETUP_NAME"
+run cryptsetup luksFormat "${DEVICE}2"
+run cryptsetup open --type luks "${DEVICE}2" "$CRYPTSETUP_NAME"
 
 comment Check whether "$CRYPTSETUP_NAME" is mounted
 if ! fdisk -l | grep " /dev/mapper/$CRYPTSETUP_NAME:"
@@ -85,8 +85,8 @@ run pvcreate "/dev/mapper/$CRYPTSETUP_NAME"
 run vgcreate "$VG_NAME" "/dev/mapper/$CRYPTSETUP_NAME"
 
 comment Create logical volumes with lvm
-lvcreate "${LV_SWAP_SIZE[@]}" "$VG_NAME" -n "$LV_SWAP_NAME"
-lvcreate "${LV_ROOT_SIZE[@]}" "$VG_NAME" -n "$LV_ROOT_NAME"
+run lvcreate "${LV_SWAP_SIZE[@]}" "$VG_NAME" -n "$LV_SWAP_NAME"
+run lvcreate "${LV_ROOT_SIZE[@]}" "$VG_NAME" -n "$LV_ROOT_NAME"
 
 comment Create swap and turn it on
 run mkswap /dev/mapper/"$VG_NAME"-"$LV_SWAP_NAME"
