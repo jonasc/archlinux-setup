@@ -103,11 +103,11 @@ run btrfs subvolume create /mnt/@snapshots
 
 comment unmount root filesystem and mount BTRFS subvolumes instead
 run umount /mnt
-run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@ /dev/mapper/System-root /mnt
+run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@ /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt
 run mkdir /mnt/home
 run mkdir /mnt/.snapshots
-run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@home /dev/mapper/System-root /mnt/home
-run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@snapshots /dev/mapper/System-root /mnt/.snapshots
+run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@home /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/home
+run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@snapshots /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/.snapshots
 
 comment Exclude some directories from snapshots
 run mkdir -p /mnt/var/cache/pacman
