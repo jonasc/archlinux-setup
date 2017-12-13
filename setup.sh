@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 COUNTRY=Germany
+DEVICE=/dev/sda
 CRYPTSETUP_NAME=cryptoroot
 VG_NAME=system
 LV_SWAP_NAME=swap
@@ -48,8 +49,6 @@ run timedatectl set-ntp true
 
 comment Show devices and ask which one should be formatted
 run fdisk -l
-echo -n "Install device? "
-read DEVICE
 echo "We will install on $(tput bold; tput setaf 1)$DEVICE$(tput sgr0)! This is the last moment to press Ctrl+C."
 echo -n "Enter to continue..."
 read
@@ -147,10 +146,11 @@ then
 fi
 
 comment System is set up
-sed '/^# FIRST PART STARTS HERE$/,/^# FIRST PART ENDS HERE/d' "$0" > /mnt/setup.sh
+sed '/^# FIRST PART STARTS HERE/,/^# FIRST PART ENDS HERE/d' "$0" > /mnt/setup.sh
 chmod +x /mnt/setup.sh
 
 comment Please run "arch-chroot /mnt" and then "/setup.sh"
+exit 0
 
 # FIRST PART ENDS HERE (Do not remove anything before parenthesis)
 comment Running second part of setup inside chroot
