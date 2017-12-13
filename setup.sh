@@ -8,7 +8,7 @@ LV_ROOT_NAME=root
 LV_ROOT_SIZE=(-l 100%FREE)
 
 comment() {
-    echo ">> $(tput setaf 2) $@"
+    echo ">> $(tput setaf 2) $@$(tput sgr0)"
 }
 
 fail() {
