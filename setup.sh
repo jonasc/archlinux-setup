@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+COUNTRY=Germany
 CRYPTSETUP_NAME=cryptoroot
 VG_NAME=system
 LV_SWAP_NAME=swap
@@ -30,8 +31,15 @@ run() {
 comment Load german keyboard layout
 run loadkeys de-latin1
 
+comment Test whether we are booted into EFI
+run ls --ignore='*' /sys/firmware/efi/efivars
+
 comment Test internet connection
 run ping -c 2 archlinux.org
+
+comment Install reflector tool and rate best download mirrors
+run pacman --noconfirm -Sy reflector
+reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
 comment Update clock
 run timedatectl set-ntp true
