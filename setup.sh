@@ -163,3 +163,25 @@ sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
     | tr '\n' ' '
 )
 sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
+
+comment Rebuild initramfs
+run mkinitcpio -p linux
+
+comment Find id of installation disk
+DISK_ID=
+for temp_disk_id in /dev/disk/by-id/*
+do
+    if [[ "$(realpath "$(readlink "$temp_disk_id")")" == "$DEVICE" ]]
+    then
+        DISK_ID="$temp_disk_id"
+    fi
+done
+
+comment Edit /etc/default/grub
+run sed --in-place 's@^\(GRUB_CMDLINE_LINUX="\)"\+@\1cryptdevice='"$DISK_ID:$CRYPTSETUP_NAME"':allow-discards"@;' /etc/default/grub
+run sed --in-place 's@^\(GRUB_PRELOAD_MODULES="[^"]\+\)"\+@\1 lvm@;' /etc/default/grub
+run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\)."\+@\1y@;' /etc/default/grub
+
+comment Generate /boot/grub/grub.cfg and install grub
+run grub-mkconfig -o /boot/grub/grub.cfg
+run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub
