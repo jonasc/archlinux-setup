@@ -41,6 +41,8 @@ run fdisk -l
 echo -n "Install device? "
 read DEVICE
 echo "We will install on $(tput bold; tput setaf 1)$DEVICE$(tput sgr0)! This is the last moment to press Ctrl+C."
+echo -n "Enter to continue..."
+read
 
 comment Create partitions for EFI and system
 if ! echo 'o
@@ -61,6 +63,11 @@ then
     fail "Cannot setup device partitions"
     exit 1
 fi
+
+comment "This is the partition setup. Please check.
+run gdisk -l "$DEVICE"
+echo -n "Enter to continue..."
+read
 
 comment Format "${DEVICE}2" with LUKS and open it
 cryptsetup luksFormat "${DEVICE}2"
