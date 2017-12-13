@@ -8,6 +8,7 @@ LV_SWAP_NAME=swap
 LV_SWAP_SIZE=(-L 1G)
 LV_ROOT_NAME=root
 LV_ROOT_SIZE=(-l 100%FREE)
+NEW_USER=jonas
 
 comment() {
     echo ">> $(tput setaf 2) $@$(tput sgr0)"
@@ -185,3 +186,38 @@ run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\)."\+@\1y@;' /etc/default/grub
 comment Generate /boot/grub/grub.cfg and install grub
 run grub-mkconfig -o /boot/grub/grub.cfg
 run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub
+
+comment Set correct time zone and set hardware clock accordingly
+run ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+run hwclock --systohc --utc
+
+comment Uncomment a number of locales, generate locales, and set default language
+run sed --in-place 's@^#\(\(en_US\|en_GB\|de_DE\|es_ES\|es_NI\)\.UTF-8.*\)@@' /etc/locale.gen
+run locale-gen
+echo LANG=en_US.UTF-8 >> /etc/locale.conf
+
+comment Set up hostname
+echo -n "What should this computer be called? "
+read HOSTNAME
+echo "$HOSTNAME" > /etc/hostname
+
+comment Update all packages and install some new ones
+run pacman -Syu sudo zsh
+
+comment Create user and add to relevant group
+run useradd -m -g users -G wheel,rfkill,log -s "$(which zsh)" "$NEW_USER"
+
+comment Set password of new user
+run passwd jonas
+
+comment Enable sudo access for group wheel
+echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/sudo-for-wheel-group
+
+comment Forget root password
+run passwd -l root
+
+comment Basic installation done, execute the following commands to restart "
+exit
+umount -R /mnt
+swapoff -a
+reboot"
