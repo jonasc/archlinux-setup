@@ -170,7 +170,7 @@ comment Rebuild initramfs
 run mkinitcpio -p linux
 
 comment Find id of installation disk
-DISK_ID=$(blkid --output export "${DEVICE}2" | grep --silent 's/^UUID=//p')
+DISK_ID=$(blkid --output export "${DEVICE}2" | sed --silent 's/^UUID=//p')
 
 comment Edit /etc/default/grub
 run sed --in-place 's@^\(GRUB_CMDLINE_LINUX="\)"\+@\1cryptdevice=UUID='"$DISK_ID:$CRYPTSETUP_NAME"':allow-discards"@;' /etc/default/grub
