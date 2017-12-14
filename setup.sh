@@ -56,6 +56,10 @@ echo -n "Enter to continue..."
 read
 
 comment Create partitions for EFI and system
+# o y: Create a new empty GUID partition table (GPT) and confirm
+# n 1 '' 150M ef00: create new partition with id 1, at the beginning, size 150M, and type ef00 (EFI System)
+# n 2 '' '' 8300: create new partition with id2, after 1, size rest of the disk, and type 8300 (Linux filesystem)
+# w y: Write table to disk and exit
 if ! echo 'o
 y
 n
