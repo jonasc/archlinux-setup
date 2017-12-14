@@ -1,14 +1,24 @@
 #!/usr/bin/bash
 
+# Preferred keyboard layout
 KEYMAP=de-latin1
+# Country to filter pacman mirrors
 COUNTRY=Germany
+# Where to install Arch
 DEVICE=/dev/sda
+# Size of EFI partition
+EFI_PARTITION_SIZE=150M
+# What should the cryptdevice be called?
 CRYPTSETUP_NAME=cryptoroot
+# What should be the name of the volume group?
 VG_NAME=system
+# What should the name and size of the swap partition be?
 LV_SWAP_NAME=swap
 LV_SWAP_SIZE=(-L 1G)
+# What should the name and size of the root partition be?
 LV_ROOT_NAME=root
 LV_ROOT_SIZE=(-l 100%FREE)
+# What is the name of the new user?
 NEW_USER=jonas
 
 comment() {
@@ -44,6 +54,7 @@ run ping -c 2 archlinux.org
 
 comment Install reflector tool and rate best download mirrors
 run pacman --noconfirm -Sy reflector
+# Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
 reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
 comment Update clock
@@ -57,7 +68,7 @@ read
 
 comment Create partitions for EFI and system
 # o y: Create a new empty GUID partition table (GPT) and confirm
-# n 1 '' 150M ef00: create new partition with id 1, at the beginning, size 150M, and type ef00 (EFI System)
+# n 1 '' $EFI_PARTITION_SIZE ef00: create new partition with id 1, at the beginning, size $EFI_PARTITION_SIZE, and type ef00 (EFI System)
 # n 2 '' '' 8300: create new partition with id2, after 1, size rest of the disk, and type 8300 (Linux filesystem)
 # w y: Write table to disk and exit
 if ! echo 'o
@@ -65,7 +76,7 @@ y
 n
 1
 
-150M
+'"$EFI_PARTITION_SIZE"'
 ef00
 n
 2
@@ -162,23 +173,30 @@ exit 0
 comment Running second part of setup inside chroot
 
 comment Patching /etc/mkinitcpio.conf
+# Add/move "keyboard" and "keymap" before "block"
+# Add "encrypt" and "lvm2" before "filesystems"
 NEW_HOOKS=$(
 sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
     | tr ' ' '\n' \
     | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^keyboard$/d' \
     | tr '\n' ' '
 )
+# Replace old HOOKS with new ones
+# Add btrfs binary to BINARIES to be able to make file system operations before booting
 sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
 
 comment Rebuild initramfs
 run mkinitcpio -p linux
 
-comment Find id of installation disk
+comment Find uuid of installation disk
 DISK_ID=$(blkid --output export "${DEVICE}2" | sed --silent 's/^UUID=//p')
 
 comment Edit /etc/default/grub
+# Set cryptdevice to linux command line
 run sed --in-place 's@^\(GRUB_CMDLINE_LINUX="\)"\+@\1cryptdevice=UUID='"$DISK_ID:$CRYPTSETUP_NAME"':allow-discards"@;' /etc/default/grub
+# Add lvm module to preloaded modules
 run sed --in-place 's@^\(GRUB_PRELOAD_MODULES="[^"]\+\)"\+@\1 lvm"@;' /etc/default/grub
+# Enable crypto
 run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\).\+@\1y@;' /etc/default/grub
 
 comment Generate /boot/grub/grub.cfg and install grub
