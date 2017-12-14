@@ -222,7 +222,7 @@ comment Add keyfile to LUKS
 run cryptsetup luksAddKey "${DEVICE}2" /crypto_keyfile.bin
 
 comment Add keyfile to /etc/mkinitcpio.conf
-sed --in-place 's/^\(FILES=([^)]\+\)/\1 /crypto_keyfile.bin/' /etc/mkinitcpio.conf
+sed --in-place 's/^\(FILES=(\)/\1\/crypto_keyfile.bin /' /etc/mkinitcpio.conf
 run mkinitcpio -p linux
 
 comment Basic installation done, execute the following commands to restart "
