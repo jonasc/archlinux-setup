@@ -209,6 +209,18 @@ echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/sudo-for-wheel-group
 comment Forget root password
 run passwd -l root
 
+comment Create random key to auto-unlock lvm after already giving the password for GRUB
+run dd bs=512 count=4 if=/dev/urandom of=/crypto_keyfile.bin
+run chmod 000 /crypto_keyfile.bin
+run chmod 600 /boot/initramfs-linux*
+
+comment Add keyfile to LUKS
+run cryptsetup luksAddKey "${DEVICE}2" /crypto_keyfile.bin
+
+comment Add keyfile to /etc/mkinitcpio.conf
+sed --in-place 's/^\(FILES=([^)]\+\)/\1 /crypto_keyfile.bin/' /etc/mkinitcpio.conf
+run mkinitcpio -p linux
+
 comment Basic installation done, execute the following commands to restart "
 exit
 umount -R /mnt
