@@ -202,7 +202,7 @@ read HOSTNAME
 echo "$HOSTNAME" > /etc/hostname
 
 comment Update all packages and install some new ones
-run pacman -Syu sudo zsh
+run pacman --noconfirm -Syu sudo zsh
 
 comment Create user and add to relevant group
 run useradd -m -g users -G wheel,rfkill,log -s "$(which zsh)" "$NEW_USER"
