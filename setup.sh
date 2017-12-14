@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+KEYMAP=de-latin1
 COUNTRY=Germany
 DEVICE=/dev/sda
 CRYPTSETUP_NAME=cryptoroot
@@ -33,7 +34,7 @@ run() {
 # FIRST PART STARTS HERE (Do not remove anything before parenthesis)
 
 comment Load german keyboard layout
-run loadkeys de-latin1
+run loadkeys "$KEYMAP"
 
 comment Test whether we are booted into EFI
 run ls --ignore='*' /sys/firmware/efi/efivars
@@ -188,6 +189,9 @@ comment Uncomment a number of locales, generate locales, and set default languag
 run sed --in-place 's@^#\(\(en_US\|en_GB\|de_DE\|es_ES\|es_NI\)\.UTF-8.*\)@@' /etc/locale.gen
 run locale-gen
 echo LANG=en_US.UTF-8 >> /etc/locale.conf
+
+comment Make keyboard layout persistent
+echo KEYMAP="$KEYMAP" >> /etc/vconsole.conf
 
 comment Set up hostname
 echo -n "What should this computer be called? "
