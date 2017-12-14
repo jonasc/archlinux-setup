@@ -169,17 +169,10 @@ comment Rebuild initramfs
 run mkinitcpio -p linux
 
 comment Find id of installation disk
-DISK_ID=
-for temp_disk_id in /dev/disk/by-id/*
-do
-    if [[ "$(readlink --canonicalize "$temp_disk_id")" == "$DEVICE" ]]
-    then
-        DISK_ID="$temp_disk_id"
-    fi
-done
+DISK_ID=$(blkid --output export "${DEVICE}2" | grep --silent 's/^UUID=//p')
 
 comment Edit /etc/default/grub
-run sed --in-place 's@^\(GRUB_CMDLINE_LINUX="\)"\+@\1cryptdevice='"$DISK_ID:$CRYPTSETUP_NAME"':allow-discards"@;' /etc/default/grub
+run sed --in-place 's@^\(GRUB_CMDLINE_LINUX="\)"\+@\1cryptdevice=UUID='"$DISK_ID:$CRYPTSETUP_NAME"':allow-discards"@;' /etc/default/grub
 run sed --in-place 's@^\(GRUB_PRELOAD_MODULES="[^"]\+\)"\+@\1 lvm"@;' /etc/default/grub
 run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\).\+@\1y@;' /etc/default/grub
 
