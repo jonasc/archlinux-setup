@@ -207,8 +207,8 @@ run sed --in-place 's@^\(GRUB_PRELOAD_MODULES="[^"]\+\)"\+@\1 lvm"@;' /etc/defau
 run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\).\+@\1y@;' /etc/default/grub
 
 comment "Generate /boot/grub/grub.cfg and install grub"
+run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=boot
 run grub-mkconfig -o /boot/grub/grub.cfg
-run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub
 
 comment "Set correct time zone and set hardware clock accordingly"
 run ln -sf /usr/share/zoneinfo/"$TIMEZONE" /etc/localtime
