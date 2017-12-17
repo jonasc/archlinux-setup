@@ -61,7 +61,7 @@ run ping -c 2 archlinux.org
 comment "Install reflector tool and rate best download mirrors"
 run pacman --noconfirm -Sy reflector
 # Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
-reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
 comment "Update clock"
 run timedatectl set-ntp true
@@ -181,6 +181,11 @@ exit 0
 # SECOND PART STARTS HERE (Do not remove anything before parenthesis)
 
 comment "Running second part of setup inside chroot"
+
+comment "Install reflector tool and rate best download mirrors"
+run pacman --noconfirm -Sy reflector
+# Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
+run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
 comment "Patching /etc/mkinitcpio.conf"
 # Add/move "keyboard" and "keymap" before "block"
