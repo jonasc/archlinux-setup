@@ -255,6 +255,11 @@ sed --in-place 's/^\(FILES=(\)/\1\/crypto_keyfile.bin /' /etc/mkinitcpio.conf
 comment "Rebuild initramfs"
 run mkinitcpio -p linux
 
+SETUP_FILE="$(getent passwd "$NEW_USER" | cut -d: -f6)/setup.sh"
+sed '/^# FIRST PART STARTS HERE/,/^# SECOND PART ENDS HERE/d' "$0" > "$SETUP_FILE"
+chmod +x "$SETUP_FILE"
+chown "$NEW_USER:users" "$SETUP_FILE"
+
 comment "Basic installation done, execute the following commands to restart"
 comment "\$ exit"
 comment "\$ umount -R /mnt"
@@ -262,11 +267,7 @@ comment "\$ swapoff -a"
 comment "\$ reboot"
 comment "After reboot log in as new user and execute"
 comment "\$ ./setup.sh"
-
-SETUP_FILE="$(getent passwd "$NEW_USER" | cut -d: -f6)/setup.sh"
-sed '/^# FIRST PART STARTS HERE/,/^# SECOND PART ENDS HERE/d' "$0" > "$SETUP_FILE"
-chmod +x "$SETUP_FILE"
-chown "$NEW_USER:users" "$SETUP_FILE"
+exit 0
 
 # SECOND PART ENDS HERE (Do not remove anything before parenthesis)
 # THIRD PART STARTS HERE (Do not remove anything before parenthesis)
