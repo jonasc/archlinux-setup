@@ -4,6 +4,8 @@
 KEYMAP=de-latin1
 # Country to filter pacman mirrors
 COUNTRY=Germany
+# Time zone
+TIMEZONE=Europe/Berlin
 # Where to install Arch
 DEVICE=/dev/sda
 # Size of EFI partition
@@ -209,7 +211,7 @@ run grub-mkconfig -o /boot/grub/grub.cfg
 run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub
 
 comment "Set correct time zone and set hardware clock accordingly"
-run ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+run ln -sf /usr/share/zoneinfo/"$TIMEZONE" /etc/localtime
 run hwclock --systohc --utc
 
 comment "Uncomment a number of locales, generate locales, and set default language"
