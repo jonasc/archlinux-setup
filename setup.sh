@@ -166,7 +166,9 @@ comment "System is set up"
 sed '/^# FIRST PART STARTS HERE/,/^# FIRST PART ENDS HERE/d' "$0" > /mnt/setup.sh
 chmod +x /mnt/setup.sh
 
-comment "Please run 'arch-chroot /mnt' and then '/setup.sh'"
+comment "Please run the following commands."
+comment "\$ arch-chroot /mnt"
+comment "\$ /setup.sh"
 exit 0
 
 # FIRST PART ENDS HERE (Do not remove anything before parenthesis)
