@@ -276,6 +276,16 @@ then
     exec sudo "$0" "$@"
 fi
 
+comment "Install ifplugd to automate network access over ethernet"
+run pacman --noconfirm -Syu ifplugd
+for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
+do
+    comment ">> Device $device"
+    sed 's/^\(Interface=\)\S*/\1'"$device"'/' /etc/netctl/examples/ethernet-dhcp > "/etc/netctl/$device-dhcp"
+    run systemctl enable "netctl-ifplugd@$device"
+    run systemctl start "netctl-ifplugd@$device"
+done
+
 comment "Add additional wanted packages"
 run pacman  --noconfirm -Syu "${WANTED_PACKAGES[@]}"
 
