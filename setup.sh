@@ -256,7 +256,7 @@ comment "Rebuild initramfs"
 run mkinitcpio -p linux
 
 SETUP_FILE="$(getent passwd "$NEW_USER" | cut -d: -f6)/setup.sh"
-sed '/^# FIRST PART STARTS HERE/,/^# SECOND PART ENDS HERE/d' "$0" > "$SETUP_FILE"
+sed '/^# SECOND PART STARTS HERE/,/^# SECOND PART ENDS HERE/d' "$0" > "$SETUP_FILE"
 chmod +x "$SETUP_FILE"
 chown "$NEW_USER:users" "$SETUP_FILE"
 
