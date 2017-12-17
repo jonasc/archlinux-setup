@@ -20,6 +20,10 @@ LV_ROOT_NAME=root
 LV_ROOT_SIZE=(-l 100%FREE)
 # What is the name of the new user?
 NEW_USER=jonas
+# Which packages do we want to install in the beginning?
+WANTED_PACKAGES=(
+    firefox
+)
 
 comment() {
     echo ">> $(tput setaf 2) $@$(tput sgr0)"
@@ -172,6 +176,8 @@ comment "\$ /setup.sh"
 exit 0
 
 # FIRST PART ENDS HERE (Do not remove anything before parenthesis)
+# SECOND PART STARTS HERE (Do not remove anything before parenthesis)
+
 comment "Running second part of setup inside chroot"
 
 comment "Patching /etc/mkinitcpio.conf"
@@ -186,9 +192,6 @@ sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
 # Replace old HOOKS with new ones
 # Add btrfs binary to BINARIES to be able to make file system operations before booting
 sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
-
-comment "Rebuild initramfs"
-run mkinitcpio -p linux
 
 comment "Find uuid of installation disk"
 DISK_ID=$(blkid --output export "${DEVICE}2" | sed --silent 's/^UUID=//p')
@@ -247,6 +250,7 @@ run cryptsetup luksAddKey "${DEVICE}2" /crypto_keyfile.bin
 
 comment "Add keyfile to /etc/mkinitcpio.conf"
 sed --in-place 's/^\(FILES=(\)/\1\/crypto_keyfile.bin /' /etc/mkinitcpio.conf
+comment "Rebuild initramfs"
 run mkinitcpio -p linux
 
 comment "Basic installation done, execute the following commands to restart"
@@ -254,3 +258,21 @@ comment "\$ exit"
 comment "\$ umount -R /mnt"
 comment "\$ swapoff -a"
 comment "\$ reboot"
+comment "After reboot log in as new user and execute"
+comment "\$ ./setup.sh"
+
+SETUP_FILE="$(getent passwd "$NEW_USER" | cut -d: -f6)/setup.sh"
+sed '/^# FIRST PART STARTS HERE/,/^# SECOND PART ENDS HERE/d' "$0" > "$SETUP_FILE"
+chmod +x "$SETUP_FILE"
+
+# SECOND PART ENDS HERE (Do not remove anything before parenthesis)
+# THIRD PART STARTS HERE (Do not remove anything before parenthesis)
+if (( EUID != 0 ))
+then
+    exec sudo "$0" "$@"
+fi
+
+comment "Add additional wanted packages"
+run pacman  --noconfirm -Syu "${WANTED_PACKAGES[@]}"
+
+# THIRD PART ENDS HERE (Do not remove anything before parenthesis)
