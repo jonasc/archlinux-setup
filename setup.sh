@@ -308,4 +308,13 @@ run pacman --noconfirm -Sy "${GUI_PACKAGES[@]}"
 comment "Add additional wanted packages"
 run pacman  --noconfirm -Sy "${WANTED_PACKAGES[@]}"
 
+comment "Install Sublime Text 3"
+curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
+run pacman-key --lsign-key 8A8F901A
+echo "
+[sublime-text]
+Server = https://download.sublimetext.com/arch/stable/x86_64
+" | tee -a /etc/pacman.conf
+run pacman -Syu sublime-text
+
 # THIRD PART ENDS HERE (Do not remove anything before parenthesis)
