@@ -283,7 +283,7 @@ then
 fi
 
 comment "Install ifplugd to automate network access over ethernet"
-run pacman --noconfirm -Syu ifplugd
+run pacman --noconfirm -Sy ifplugd
 for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
 do
     comment ">> Device $device"
@@ -292,7 +292,20 @@ do
     run systemctl start "netctl-ifplugd@$device"
 done
 
+comment "Install graphical user interface"
+GUI_PACKAGES=(
+    i3-wm        # The windows manager
+    i3status     # Status command
+    i3lock       # Lock screen
+    dmenu        # Application launcher
+    xorg-xinit   # Start x.org session with startx
+    xorg-server  # The x.org server
+    rxvt-unicode # A terminal emulator
+    polkit       # PolicyKit to be able to interact with the system ad non-root
+)
+run pacman --noconfirm -Sy "${GUI_PACKAGES[@]}"
+
 comment "Add additional wanted packages"
-run pacman  --noconfirm -Syu "${WANTED_PACKAGES[@]}"
+run pacman  --noconfirm -Sy "${WANTED_PACKAGES[@]}"
 
 # THIRD PART ENDS HERE (Do not remove anything before parenthesis)
