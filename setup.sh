@@ -24,6 +24,7 @@ LV_ROOT_SIZE=(-l 100%FREE)
 NEW_USER=jonas
 # Which packages do we want to install in the beginning?
 WANTED_PACKAGES=(
+    git
     firefox
 )
 
