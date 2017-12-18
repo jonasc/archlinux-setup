@@ -303,10 +303,10 @@ GUI_PACKAGES=(
     rxvt-unicode # A terminal emulator
     polkit       # PolicyKit to be able to interact with the system ad non-root
 )
-run pacman --noconfirm -Sy "${GUI_PACKAGES[@]}"
+run pacman --noconfirm -S "${GUI_PACKAGES[@]}"
 
 comment "Add additional wanted packages"
-run pacman  --noconfirm -Sy "${WANTED_PACKAGES[@]}"
+run pacman  --noconfirm -S "${WANTED_PACKAGES[@]}"
 
 comment "Install Sublime Text 3"
 curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
@@ -315,6 +315,6 @@ echo "
 [sublime-text]
 Server = https://download.sublimetext.com/arch/stable/x86_64
 " | tee -a /etc/pacman.conf
-run pacman -Syu sublime-text
+run pacman -Sy sublime-text
 
 # THIRD PART ENDS HERE (Do not remove anything before parenthesis)
