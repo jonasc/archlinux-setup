@@ -305,6 +305,18 @@ GUI_PACKAGES=(
 )
 run pacman --noconfirm -S "${GUI_PACKAGES[@]}"
 
+comment "Install AUR helper"
+run pacman --noconfirm -S --needed base-devel
+run git clone https://aur.archlinux.org/package-query.git
+cd package-query
+run sudo -u "$NEW_USER" makepkg -si
+cd ..
+run git clone https://aur.archlinux.org/yaourt.git
+cd yaourt
+run sudo -u "$NEW_USER" makepkg -si
+cd ..
+run rm -rf package-query yaourt
+
 comment "Add additional wanted packages"
 run pacman  --noconfirm -S "${WANTED_PACKAGES[@]}"
 
