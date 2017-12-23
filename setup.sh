@@ -297,7 +297,7 @@ read HOSTNAME
 run echo "$HOSTNAME" > /etc/hostname
 
 comment "Update all packages and install some new ones"
-run pacman --noconfirm -Syu sudo zsh
+run pacman --noconfirm --sync --sysupgrade --needed sudo zsh
 
 comment "Create user and add to relevant group"
 run useradd -m -g users -G wheel,rfkill,log -s "$(which zsh)" "$NEW_USER"
@@ -366,22 +366,22 @@ GUI_PACKAGES=(
     rxvt-unicode # A terminal emulator
     polkit       # PolicyKit to be able to interact with the system ad non-root
 )
-run pacman --noconfirm -S "${GUI_PACKAGES[@]}"
+run pacman --noconfirm --sync "${GUI_PACKAGES[@]}"
 
 comment "Install AUR helper"
-run pacman --noconfirm -S --needed base-devel git
-run git clone https://aur.archlinux.org/package-query.git
+run pacman --noconfirm --sync --needed base-devel git
+run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/package-query.git
 cd package-query
-run sudo -u "$NEW_USER" makepkg -si
+run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
 cd ..
-run git clone https://aur.archlinux.org/yaourt.git
+run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/yaourt.git
 cd yaourt
-run sudo -u "$NEW_USER" makepkg -si
+run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
 cd ..
 run rm -rf package-query yaourt
 
 comment "Add additional wanted packages"
-run pacman  --noconfirm -S "${WANTED_PACKAGES[@]}"
+run pacman --noconfirm --sync "${WANTED_PACKAGES[@]}"
 
 comment "Install Sublime Text 3"
 if $IS_REALBOX
