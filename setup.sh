@@ -546,7 +546,7 @@ comment "Add additional packages from AUR"
 run sudo -u "$NEW_USER" yaourt --noconfirm --sync "${AUR_PACKAGES[@]}"
 
 comment "Add additional packages from PIP"
-run pip install --disable-pip-version-check "${AUR_PACKAGES[@]}"
+run pip install --disable-pip-version-check "${PIP_PACKAGES[@]}"
 
 comment "Install my dotfiles"
 echo -n "https://<...>/dotfiles.git: "
