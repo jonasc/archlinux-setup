@@ -27,6 +27,15 @@ WANTED_PACKAGES=(
     firefox
 )
 
+if lsusb | grep 'ID 80ee:0021 ' >/dev/null
+then
+    IS_VIRTUALBOX=true
+    IS_REALBOX=false
+else
+    IS_VIRTUALBOX=false
+    IS_REALBOX=true
+fi
+
 comment() {
     echo ">> $(tput setaf 2) $@$(tput sgr0)" >&2
 }
@@ -92,10 +101,17 @@ run ls --ignore='*' /sys/firmware/efi/efivars
 comment "Test internet connection"
 run ping -c 2 archlinux.org
 
-comment "Install reflector tool and rate best download mirrors"
-run pacman --noconfirm -Sy reflector
-# Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
-run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+if $IS_REALBOX
+then
+    comment "Install reflector tool and rate best download mirrors"
+    run pacman --noconfirm --sync --refresh --needed reflector
+    # Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
+    run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+else
+    comment "Set mirror to host"
+    HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
+    echo "Server = http://$HOST_IP:8080/" > /etc/pacman.d/mirrorlist
+fi
 
 comment "Update clock"
 run timedatectl set-ntp true
@@ -216,10 +232,17 @@ exit 0
 
 comment "Running second part of setup inside chroot"
 
-comment "Install reflector tool and rate best download mirrors"
-run pacman --noconfirm -Sy reflector
-# Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
-run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+if $IS_REALBOX
+then
+    comment "Install reflector tool and rate best download mirrors"
+    run pacman --noconfirm --sync --refresh --needed reflector
+    # Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
+    run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+else
+    comment "Set mirror to host"
+    HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
+    run echo "Server = http://$HOST_IP:8080/" > /etc/pacman.d/mirrorlist
+fi
 
 comment "Patching /etc/mkinitcpio.conf"
 # Add/move "keyboard" and "keymap" before "block"
@@ -246,8 +269,15 @@ run sed --in-place 's@^\(GRUB_PRELOAD_MODULES="[^"]\+\)"\+@\1 lvm"@;' /etc/defau
 run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\).\+@\1y@;' /etc/default/grub
 
 comment "Generate /boot/grub/grub.cfg and install grub"
-run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=boot
+run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=arch-grub
 run grub-mkconfig -o /boot/grub/grub.cfg
+
+if $IS_VIRTUALBOX
+then
+    comment "Copy bootloader to location where VirtualBox always finds it"
+    mkdir /boot/efi/EFI/BOOT
+    cp /boot/efi/EFI/{arch-grub/grubx64.efi,BOOT/bootx64.efi}
+fi
 
 comment "Set correct time zone and set hardware clock accordingly"
 run ln -sf /usr/share/zoneinfo/"$TIMEZONE" /etc/localtime
@@ -354,13 +384,24 @@ comment "Add additional wanted packages"
 run pacman  --noconfirm -S "${WANTED_PACKAGES[@]}"
 
 comment "Install Sublime Text 3"
-curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
-run pacman-key --lsign-key 8A8F901A
-echo "
+if $IS_REALBOX
+then
+    curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
+    run pacman-key --lsign-key 8A8F901A
+    echo "
 [sublime-text]
 Server = https://download.sublimetext.com/arch/stable/x86_64
 " | tee -a /etc/pacman.conf
-run pacman -Sy sublime-text
+else
+    HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
+    curl "http://$HOST_IP:8080/sublimehq-pub.gpg" | pacman-key --add -
+    run pacman-key --lsign-key 8A8F901A
+    echo "
+[sublime-text]
+Server = http://$HOST_IP:8080/
+" | tee -a /etc/pacman.conf
+fi
+run pacman --sync --refresh --needed sublime-text
 
 #<<<<PART-3
 
