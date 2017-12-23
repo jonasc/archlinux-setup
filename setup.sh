@@ -28,15 +28,15 @@ WANTED_PACKAGES=(
 )
 
 comment() {
-    echo ">> $(tput setaf 2) $@$(tput sgr0)"
+    echo ">> $(tput setaf 2) $@$(tput sgr0)" >&2
 }
 
 fail() {
-    echo "$(tput bold; tput setaf 5)$@$(tput sgr0)"
+    echo "$(tput bold; tput setaf 5)$@$(tput sgr0)" >&2
 }
 
 run() {
-    echo "# $(tput setaf 6)$@$(tput sgr0)"
+    echo "# $(tput setaf 6)$@$(tput sgr0)" >&2
     "$@"
     code=$?
     if (( code > 0 ))
