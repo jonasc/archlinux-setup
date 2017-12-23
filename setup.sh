@@ -246,10 +246,10 @@ comment "Patching /etc/mkinitcpio.conf"
 # Add/move "keyboard" and "keymap" before "block"
 # Add "encrypt" and "lvm2" before "filesystems"
 NEW_HOOKS=$(
-sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
-    | tr ' ' '\n' \
-    | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^keyboard$/d' \
-    | tr '\n' ' '
+    sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
+        | tr ' ' '\n' \
+        | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^keyboard$/d' \
+        | tr '\n' ' '
 )
 # Replace old HOOKS with new ones
 # Add btrfs binary to BINARIES to be able to make file system operations before booting
