@@ -265,6 +265,8 @@ run sed --in-place 's@^\(GRUB_CMDLINE_LINUX="\)"\+@\1cryptdevice=UUID='"$DISK_ID
 run sed --in-place 's@^\(GRUB_PRELOAD_MODULES="[^"]\+\)"\+@\1 lvm"@;' /etc/default/grub
 # Enable crypto
 run sed --in-place 's@^#\(GRUB_ENABLE_CRYPTODISK=\).\+@\1y@;' /etc/default/grub
+# Set GRUB timeout to 2 seconds
+run sed --in-place 's@^#\(GRUB_TIMEOUT=\).\+@\12@;' /etc/default/grub
 
 comment "Generate /boot/grub/grub.cfg and install grub"
 run grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=arch-grub
