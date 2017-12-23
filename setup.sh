@@ -56,6 +56,15 @@ SNAPPER_SUBVOLUMES=(
     /var
 )
 
+# Global directories for which COW should be disabled
+NODATACOW_DIRECTORIES=(
+)
+# User directories for which COW should be disabled
+NODATACOW_USER_DIRECTORIES=(
+    Torrents
+    "VirtualBox VMs"
+)
+
 if lsusb | grep 'ID 80ee:0021 ' >/dev/null
 then
     IS_VIRTUALBOX=true
@@ -255,10 +264,12 @@ do
     run btrfs subvolume create "/mnt$BTRFS_SUBVOLUME_PATH"
 done
 
-comment "Exclude some directories from snapshots"
-run mkdir -p /mnt/var/cache/pacman
-# Pacman packages can be re-downloaded
-run btrfs subvolume create /mnt/var/cache/pacman/pkg
+comment "Create folders with a lot of random writes with disabled copy-on-write"
+for DIRECTORY in "${NODATACOW_DIRECTORIES[@]}"
+do
+    run mkdir --parents "$DIRECTORY"
+    run chattr +C "$DIRECTORY"
+done
 
 comment "Mount EFI volume"
 run mkdir -p /mnt/boot/efi
@@ -494,6 +505,14 @@ Server = http://$HOST_IP:8080/
 " | tee -a /etc/pacman.conf
 fi
 run pacman --sync --refresh --needed sublime-text
+
+comment "Create folders with a lot of random writes with disabled copy-on-write"
+HOME_FOLDER="$(getent passwd "$NEW_USER" | cut -d: -f6)"
+for DIRECTORY in "${NODATACOW_USER_DIRECTORIES[@]}"
+do
+    run sudo -u "$NEW_USER" mkdir --parents "$HOME_FOLDER/$DIRECTORY"
+    run sudo -u "$NEW_USER" chattr +C "$HOME_FOLDER/$DIRECTORY"
+done
 
 #<<<<PART-3
 
