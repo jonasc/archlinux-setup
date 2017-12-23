@@ -33,6 +33,24 @@ WANTED_PACKAGES=(
     # Fonts
 )
 
+# Paths for which a dedicated folder in the root volume should be created
+BTRFS_MOUNTED_SUBVOLUMES=(
+    /
+    /home
+    /var
+)
+# Paths for which a local subvolume should be created
+BTRFS_LOCAL_SUBVOLUMES=(
+    # Exclude pacman package cache from snapshots
+    /var/cache/pacman/pkg
+)
+# All subvolumes (out of the above) for which snapper configurations should be created
+SNAPPER_SUBVOLUMES=(
+    /
+    /home
+    /var
+)
+
 if lsusb | grep 'ID 80ee:0021 ' >/dev/null
 then
     IS_VIRTUALBOX=true
@@ -71,6 +89,13 @@ extract-parts() {
         PARTS="$PARTS$PART"
     done
     run sed --silent "$SED_SCRIPT" "$0"
+}
+
+contains-element () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
 }
 
 if (( $# > 0 ))
@@ -187,30 +212,48 @@ comment "Create BTRFS file system and mount it"
 run mkfs.btrfs /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME"
 run mount /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt
 
-comment "Create subvolumes for /, /home, /-snapshots and /home-snapshots"
-run btrfs subvolume create /mnt/@
-run btrfs subvolume create /mnt/@home
-run btrfs subvolume create /mnt/@.snapshots
-run btrfs subvolume create /mnt/@home@.snapshots
+comment "Create subvolumes for ${BTRFS_MOUNTED_SUBVOLUMES[@]} and their respective snapshots (if wanted)"
+for BTRFS_SUBVOLUME in "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
+do
+    BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME")"
+    BTRFS_SUBVOLUME_NAME="${BTRFS_SUBVOLUME_PATH/\//@}"
+    BTRFS_SUBVOLUME_NAME="${BTRFS_SUBVOLUME_NAME//\//-}"
+    run btrfs subvolume create "/mnt/$BTRFS_SUBVOLUME_NAME"
+    if contains-element "$BTRFS_SUBVOLUME" "${SNAPPER_SUBVOLUMES[@]}"
+    then
+        run btrfs subvolume create "/mnt/${BTRFS_SUBVOLUME_NAME%@}@.snapshots"
+    fi
+done
 
 comment "unmount root filesystem and mount BTRFS subvolumes instead"
 run umount /mnt
-run mount -o compress=lzo,discard,noatime,subvol=@ /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt
-run mkdir /mnt/home
-run mkdir /mnt/.snapshots
-run mount -o compress=lzo,discard,noatime,subvol=@home /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/home
-run mount -o compress=lzo,discard,noatime,subvol=@.snapshots /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/.snapshots
-run mkdir /mnt/home/.snapshots
-run mount -o compress=lzo,discard,noatime,subvol=@home@.snapshots /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/home/.snapshots
+for BTRFS_SUBVOLUME in "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
+do
+    BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME")"
+    BTRFS_SUBVOLUME_NAME="${BTRFS_SUBVOLUME_PATH/\//@}"
+    BTRFS_SUBVOLUME_NAME="${BTRFS_SUBVOLUME_NAME//\//-}"
+    BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "/mnt$BTRFS_SUBVOLUME_PATH")"
+    run mkdir --parents "$BTRFS_SUBVOLUME_PATH"
+    run mount -o compress=lzo,discard,noatime,subvol="$BTRFS_SUBVOLUME_NAME" /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" "$BTRFS_SUBVOLUME_PATH"
+    if contains-element "$BTRFS_SUBVOLUME" "${SNAPPER_SUBVOLUMES[@]}"
+    then
+        run mkdir --parents "$BTRFS_SUBVOLUME_PATH/.snapshots"
+        run mount -o compress=lzo,discard,noatime,subvol="${BTRFS_SUBVOLUME_NAME%@}@.snapshots" /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" "$BTRFS_SUBVOLUME_PATH/.snapshots"
+    fi
+done
+
+comment "Create local subvolumes for ${BTRFS_LOCAL_SUBVOLUMES[@]}"
+for BTRFS_SUBVOLUME in "${BTRFS_LOCAL_SUBVOLUMES[@]}"
+do
+    BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME")"
+    run mkdir --parents "$(dirname "/mnt$BTRFS_SUBVOLUME_PATH")"
+    run btrfs subvolume create "/mnt$BTRFS_SUBVOLUME_PATH"
+done
 
 comment "Exclude some directories from snapshots"
 run mkdir -p /mnt/var/cache/pacman
 # Pacman packages can be re-downloaded
 run btrfs subvolume create /mnt/var/cache/pacman/pkg
-# Log files should not be reverted on a snapshot
-run btrfs subvolume create /mnt/var/log
-# We don't care about temporary files
-run btrfs subvolume create /mnt/var/tmp
 
 comment "Mount EFI volume"
 run mkdir -p /mnt/boot/efi
@@ -373,14 +416,30 @@ done
 
 comment "Install snapper and set up BTRFS snapshots"
 run pacman --noconfirm --sync --needed snapper
-run umount /.snapshots
-run rmdir /.snapshots
-run snapper --config root create-config /
-run mount /.snapshots
-run umount /home/.snapshots
-run rmdir /home/.snapshots
-run snapper --config home create-config /home
-run mount /home/.snapshots
+
+for BTRFS_SUBVOLUME in "${SNAPPER_SUBVOLUMES[@]}"
+do
+    BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME")"
+    BTRFS_SUBVOLUME_SNAPSHOT_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME/.snapshots")"
+    if contains-element "$BTRFS_SUBVOLUME" "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
+    then
+        run umount "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
+        run rmdir "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
+    fi
+    if [[ "$BTRFS_SUBVOLUME" == "/" ]]
+    then
+        CONFIG=root
+    else
+        CONFIG="${BTRFS_SUBVOLUME#/}"
+        CONFIG="${CONFIG//\//-}"
+    fi
+    run snapper --config "$CONFIG" create-config "$BTRFS_SUBVOLUME_PATH"
+    if contains-element "$BTRFS_SUBVOLUME" "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
+    then
+        run mount "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
+    fi
+done
+
 run systemctl enable snapper-timeline.timer
 
 comment "Install graphical user interface"
