@@ -447,7 +447,7 @@ do
 done
 
 comment "Install snapper and set up BTRFS snapshots"
-run pacman --noconfirm --sync --needed snapper
+run pacman --noconfirm --sync --needed snapper snap-pac
 
 for BTRFS_SUBVOLUME in "${SNAPPER_SUBVOLUMES[@]}"
 do
