@@ -24,7 +24,13 @@ LV_ROOT_SIZE=(-l 100%FREE)
 NEW_USER=jonas
 # Which packages do we want to install in the beginning?
 WANTED_PACKAGES=(
+    # Command line tools
+    the_silver_searcher
+    # Daemons an alike
+    syncthing
+    # Desktop applications
     firefox
+    # Fonts
 )
 
 if lsusb | grep 'ID 80ee:0021 ' >/dev/null
