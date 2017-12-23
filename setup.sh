@@ -71,6 +71,18 @@ fi
 #<<<<CONFIGURATION
 #>>>>PART-1
 
+echo "#!/usr/bin/bash
+
+swapoff --all
+umount --recursive /mnt
+lvremove --force system/root
+lvremove --force system/swap
+vgremove --force system
+pvremove --force /dev/mapper/$CRYPTSETUP_NAME
+cryptsetup close /dev/mapper/$CRYPTSETUP_NAME
+" > "$(dirname "$0")/remove.sh"
+chmod +x "$(dirname "$0")/remove.sh"
+
 comment "Load german keyboard layout"
 run loadkeys "$KEYMAP"
 
