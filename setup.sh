@@ -42,6 +42,10 @@ GUI_PACKAGES=(
 WANTED_PACKAGES=(
     # Command line tools
     the_silver_searcher
+    tree
+    htop
+    gtop
+    lm_sensors # Requirement for mpd py3status module
     # Daemons an alike
     syncthing
     # Publishing
@@ -53,6 +57,7 @@ WANTED_PACKAGES=(
     python-pip
     python-virtualenv
     python-pipenv
+    python-mpd2       # Requirement for mpd py3status module
     # Desktop applications
     firefox
     # Fonts
@@ -60,6 +65,10 @@ WANTED_PACKAGES=(
 AUR_PACKAGES=(
     # Dotfiles manager
     yadm-git
+    # i3
+    py3status
+    cower-git        # Requirement for one py3status module
+    i3ipc-python-git # Requirement for one py3status module
 )
 PIP_PACKAGES=(
     # To use template files with yadm
