@@ -512,7 +512,7 @@ else
 Server = http://$HOST_IP:8080/
 " | tee -a /etc/pacman.conf
 fi
-run pacman --sync --refresh --needed sublime-text
+run pacman --noconfirm --sync --refresh --needed sublime-text
 
 comment "Create folders with a lot of random writes with disabled copy-on-write"
 HOME_FOLDER="$(getent passwd "$NEW_USER" | cut -d: -f6)"
