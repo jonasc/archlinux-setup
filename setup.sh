@@ -2,6 +2,11 @@
 
 # Preferred keyboard layout
 KEYMAP=de-latin1
+X11_KEYMAP=( de           # German keyboard layout
+             ''           # No model
+             ''           # No variant
+             compose:prsc # Use print key as compose key
+)
 # Country to filter pacman mirrors
 COUNTRY=Germany
 # Time zone
@@ -554,6 +559,9 @@ read HOST_USER
 run sudo -u "$NEW_USER" yadm clone "https://$HOST_USER/dotfiles.git"
 comment "Configure local yadm class as 'home'"
 run sudo -u "$NEW_USER" yadm config local.class home
+
+comment "Set X11 keymap"
+localectl set-x11-keymap "${X11_KEYMAP[@]}"
 
 #<<<<PART-3
 
