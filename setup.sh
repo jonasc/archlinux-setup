@@ -45,6 +45,7 @@ WANTED_PACKAGES=(
     tree
     htop
     gtop
+    rsync
     lm_sensors # Requirement for mpd py3status module
     # Daemons an alike
     syncthing
@@ -65,6 +66,8 @@ WANTED_PACKAGES=(
 AUR_PACKAGES=(
     # Dotfiles manager
     yadm-git
+    # Management
+    reflector-timer
     # i3
     py3status
     cower-git        # Requirement for one py3status module
@@ -104,6 +107,7 @@ NODATACOW_USER_DIRECTORIES=(
 
 PRIVATE_PACKAGES=(
     pacman-cache-cleanup-hook
+    reflector-timer-config
 )
 
 if lsusb | grep 'ID 80ee:0021 ' >/dev/null
