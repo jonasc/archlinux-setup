@@ -523,7 +523,7 @@ do
 done
 
 comment "Install packages from my own package repository"
-run sudo -u "$NEW_USER" git clone git@github.com:jonasc/archlinux-pkgbuilds.git
+run sudo -u "$NEW_USER" git clone https://github.com/jonasc/archlinux-pkgbuilds.git
 cd archlinux-pkgbuilds
 for PACKAGE in "${PRIVATE_PACKAGES[@]}"
 do
