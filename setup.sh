@@ -346,11 +346,21 @@ then
 fi
 
 comment "Install ifplugd to automate network access over ethernet"
-run pacman --noconfirm -Sy ifplugd
 for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
 do
-    comment ">> Device $device"
-    sed 's/^\(Interface=\)\S*/\1'"$device"'/' /etc/netctl/examples/ethernet-dhcp > "/etc/netctl/$device-dhcp"
+    comment ">> Device $device netctl profile"
+    run sed 's/^\(Interface=\)\S*/\1'"$device"'/' /etc/netctl/examples/ethernet-dhcp > "/etc/netctl/$device-dhcp"
+    run netctl start "$device-dhcp"
+done
+while ! ping -c 2 archlinux.org
+do
+    sleep 1
+done
+run pacman --noconfirm --sync --refresh --needed ifplugd
+for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
+do
+    run netctl stop "$device-dhcp"
+    comment ">> Device $device ifplugd services"
     run systemctl enable "netctl-ifplugd@$device"
     run systemctl start "netctl-ifplugd@$device"
 done
