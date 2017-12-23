@@ -27,6 +27,17 @@ LV_ROOT_NAME=root
 LV_ROOT_SIZE=(-l 100%FREE)
 # What is the name of the new user?
 NEW_USER=jonas
+GUI_PACKAGES=(
+    i3-wm        # The windows manager
+    i3status     # Status command
+    i3lock       # Lock screen
+    dmenu        # Application launcher
+    xorg-xinit   # Start x.org session with startx
+    xorg-server  # The x.org server
+    rxvt-unicode # A terminal emulator
+    polkit       # PolicyKit to be able to interact with the system ad non-root
+    xrandr       # Graphics configurations
+)
 # Which packages do we want to install in the beginning?
 WANTED_PACKAGES=(
     # Command line tools
@@ -480,16 +491,6 @@ done
 run systemctl enable snapper-timeline.timer
 
 comment "Install graphical user interface"
-GUI_PACKAGES=(
-    i3-wm        # The windows manager
-    i3status     # Status command
-    i3lock       # Lock screen
-    dmenu        # Application launcher
-    xorg-xinit   # Start x.org session with startx
-    xorg-server  # The x.org server
-    rxvt-unicode # A terminal emulator
-    polkit       # PolicyKit to be able to interact with the system ad non-root
-)
 run pacman --noconfirm --sync "${GUI_PACKAGES[@]}"
 
 comment "Install AUR helper"
