@@ -371,6 +371,18 @@ do
     run systemctl start "netctl-ifplugd@$device"
 done
 
+comment "Install snapper and set up BTRFS snapshots"
+run pacman --noconfirm --sync --needed snapper
+run umount /.snapshots
+run rmdir /.snapshots
+run snapper --config root create-config /
+run mount /.snapshots
+run umount /home/.snapshots
+run rmdir /home/.snapshots
+run snapper --config home create-config /home
+run mount /home/.snapshots
+run systemctl enable snapper-timeline.timer
+
 comment "Install graphical user interface"
 GUI_PACKAGES=(
     i3-wm        # The windows manager
