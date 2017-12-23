@@ -181,23 +181,29 @@ comment "Create BTRFS file system and mount it"
 run mkfs.btrfs /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME"
 run mount /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt
 
-comment "Create subvolumes for /, /home and snapshots"
+comment "Create subvolumes for /, /home, /-snapshots and /home-snapshots"
 run btrfs subvolume create /mnt/@
 run btrfs subvolume create /mnt/@home
-run btrfs subvolume create /mnt/@snapshots
+run btrfs subvolume create /mnt/@.snapshots
+run btrfs subvolume create /mnt/@home@.snapshots
 
 comment "unmount root filesystem and mount BTRFS subvolumes instead"
 run umount /mnt
-run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@ /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt
+run mount -o compress=lzo,discard,noatime,subvol=@ /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt
 run mkdir /mnt/home
 run mkdir /mnt/.snapshots
-run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@home /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/home
-run mount -o compress=lzo,discard,noatime,nodiratime,subvol=@snapshots /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/.snapshots
+run mount -o compress=lzo,discard,noatime,subvol=@home /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/home
+run mount -o compress=lzo,discard,noatime,subvol=@.snapshots /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/.snapshots
+run mkdir /mnt/home/.snapshots
+run mount -o compress=lzo,discard,noatime,subvol=@home@.snapshots /dev/mapper/"$VG_NAME"-"$LV_ROOT_NAME" /mnt/home/.snapshots
 
 comment "Exclude some directories from snapshots"
 run mkdir -p /mnt/var/cache/pacman
+# Pacman packages can be re-downloaded
 run btrfs subvolume create /mnt/var/cache/pacman/pkg
+# Log files should not be reverted on a snapshot
 run btrfs subvolume create /mnt/var/log
+# We don't care about temporary files
 run btrfs subvolume create /mnt/var/tmp
 
 comment "Mount EFI volume"
