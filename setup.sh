@@ -47,7 +47,29 @@ run() {
     fi
 }
 
-# FIRST PART STARTS HERE (Do not remove anything before parenthesis)
+extract-parts() {
+    SED_SCRIPT='/^#!\/usr\/bin\/bash/,/^#<<<<CONFIGURATION/p'
+    PARTS=
+    for PART in "$@"
+    do
+        SED_SCRIPT="$SED_SCRIPT;"'/^#>>>>PART-'"$PART"'/,/^#<<<<PART-'"$PART"'/p'
+        PARTS="$PARTS$PART"
+    done
+    run sed --silent "$SED_SCRIPT" "$0"
+}
+
+if (( $# > 0 ))
+then
+    comment "Parameters given to script."
+    comment "Will now extract requestes parts ($@) to new file."
+    PARTS=$(echo "$@" | tr --delete ' ')
+    extract-parts "$@" > "$(dirname "$0")/setup.$PARTS.sh"
+    run chmod +x "$(dirname "$0")/setup.$PARTS.sh"
+    exit 0
+fi
+
+#<<<<CONFIGURATION
+#>>>>PART-1
 
 comment "Load german keyboard layout"
 run loadkeys "$KEYMAP"
@@ -169,16 +191,16 @@ then
 fi
 
 comment "System is set up"
-sed '/^# FIRST PART STARTS HERE/,/^# FIRST PART ENDS HERE/d' "$0" > /mnt/setup.sh
-chmod +x /mnt/setup.sh
+run extract-parts 2 3 > /mnt/setup.sh
+run chmod +x /mnt/setup.sh
 
 comment "Please run the following commands."
 comment "\$ arch-chroot /mnt"
 comment "\$ /setup.sh"
 exit 0
 
-# FIRST PART ENDS HERE (Do not remove anything before parenthesis)
-# SECOND PART STARTS HERE (Do not remove anything before parenthesis)
+#<<<<PART-1
+#>>>>PART-2
 
 comment "Running second part of setup inside chroot"
 
@@ -261,9 +283,9 @@ comment "Rebuild initramfs"
 run mkinitcpio -p linux
 
 SETUP_FILE="$(getent passwd "$NEW_USER" | cut -d: -f6)/setup.sh"
-sed '/^# SECOND PART STARTS HERE/,/^# SECOND PART ENDS HERE/d' "$0" > "$SETUP_FILE"
-chmod +x "$SETUP_FILE"
-chown "$NEW_USER:users" "$SETUP_FILE"
+run extract-parts 3 > "$SETUP_FILE"
+run chmod +x "$SETUP_FILE"
+run chown "$NEW_USER:users" "$SETUP_FILE"
 
 comment "Basic installation done, execute the following commands to restart"
 comment "\$ exit"
@@ -274,8 +296,8 @@ comment "After reboot log in as new user and execute"
 comment "\$ ./setup.sh"
 exit 0
 
-# SECOND PART ENDS HERE (Do not remove anything before parenthesis)
-# THIRD PART STARTS HERE (Do not remove anything before parenthesis)
+#<<<<PART-2
+#>>>>PART-3
 if (( EUID != 0 ))
 then
     exec sudo "$0" "$@"
@@ -328,4 +350,5 @@ Server = https://download.sublimetext.com/arch/stable/x86_64
 " | tee -a /etc/pacman.conf
 run pacman -Sy sublime-text
 
-# THIRD PART ENDS HERE (Do not remove anything before parenthesis)
+#<<<<PART-3
+
