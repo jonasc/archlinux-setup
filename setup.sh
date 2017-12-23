@@ -37,6 +37,10 @@ WANTED_PACKAGES=(
     firefox
     # Fonts
 )
+AUR_PACKAGES=(
+    # Dotfiles manager
+    yadm-git
+)
 
 # Paths for which a dedicated folder in the root volume should be created
 BTRFS_MOUNTED_SUBVOLUMES=(
@@ -529,6 +533,15 @@ do
 done
 cd ..
 run rm -rf archlinux-pkgbuilds
+
+comment "Add additional packages from AUR"
+run sudo -u "$NEW_USER" yaourt --noconfirm --sync "${AUR_PACKAGES[@]}"
+
+comment "Install my dotfiles"
+echo -n "https://<...>/dotfiles.git: "
+read HOST_USER
+run sudo -u "$NEW_USER" yadm clone "https://$HOST_USER/dotfiles.git"
+run sudo -u "$NEW_USER" yadm config local.class home
 
 #<<<<PART-3
 
