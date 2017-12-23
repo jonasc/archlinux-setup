@@ -30,7 +30,7 @@ WANTED_PACKAGES=(
     syncthing
     # Publishing
     texlive-most
-    texlive-lang
+    biber
     # Security
     keepass
     # Desktop applications
