@@ -28,6 +28,11 @@ WANTED_PACKAGES=(
     the_silver_searcher
     # Daemons an alike
     syncthing
+    # Publishing
+    texlive-most
+    texlive-lang
+    # Security
+    keepass
     # Desktop applications
     firefox
     # Fonts
