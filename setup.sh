@@ -208,15 +208,7 @@ comment "Run pacstrap"
 run pacstrap /mnt base btrfs-progs efibootmgr grub-efi-x86_64
 
 comment "Generate /etc/fstab"
-echo "# $(tput setaf 6)genfstab -U /mnt >> /mnt/etc/fstab$(tput sgr0)"
-genfstab -U /mnt >> /mnt/etc/fstab
-code=$?
-if (( code > 0 ))
-then
-    fail "The following command executed with error $code:"
-    fail "genfstab -U /mnt >> /mnt/etc/fstab"
-    exit $code
-fi
+run genfstab -U /mnt >> /mnt/etc/fstab
 
 comment "System is set up"
 run extract-parts 2 3 > /mnt/setup.sh
@@ -255,7 +247,7 @@ sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
 )
 # Replace old HOOKS with new ones
 # Add btrfs binary to BINARIES to be able to make file system operations before booting
-sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
+run sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
 
 comment "Find uuid of installation disk"
 DISK_ID=$(blkid --output export "${DEVICE}2" | sed --silent 's/^UUID=//p')
@@ -286,15 +278,15 @@ run hwclock --systohc --utc
 comment "Uncomment a number of locales, generate locales, and set default language"
 run sed --in-place 's@^#\(\(en_US\|en_GB\|de_DE\|es_ES\|es_NI\)\.UTF-8.*\)@\1@' /etc/locale.gen
 run locale-gen
-echo LANG=en_US.UTF-8 >> /etc/locale.conf
+run echo LANG=en_US.UTF-8 >> /etc/locale.conf
 
 comment "Make keyboard layout persistent"
-echo KEYMAP="$KEYMAP" >> /etc/vconsole.conf
+run echo KEYMAP="$KEYMAP" >> /etc/vconsole.conf
 
 comment "Set up hostname"
 echo -n "What should this computer be called? "
 read HOSTNAME
-echo "$HOSTNAME" > /etc/hostname
+run echo "$HOSTNAME" > /etc/hostname
 
 comment "Update all packages and install some new ones"
 run pacman --noconfirm -Syu sudo zsh
@@ -306,7 +298,7 @@ comment "Set password of new user"
 run passwd jonas
 
 comment "Enable sudo access for group wheel"
-echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/sudo-for-wheel-group
+run echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/sudo-for-wheel-group
 
 comment "Forget root password"
 run passwd -l root
@@ -320,7 +312,7 @@ comment "Add keyfile to LUKS"
 run cryptsetup luksAddKey "${DEVICE}2" /crypto_keyfile.bin
 
 comment "Add keyfile to /etc/mkinitcpio.conf"
-sed --in-place 's/^\(FILES=(\)/\1\/crypto_keyfile.bin /' /etc/mkinitcpio.conf
+run sed --in-place 's/^\(FILES=(\)/\1\/crypto_keyfile.bin /' /etc/mkinitcpio.conf
 comment "Rebuild initramfs"
 run mkinitcpio -p linux
 
