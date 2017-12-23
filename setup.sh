@@ -33,6 +33,10 @@ WANTED_PACKAGES=(
     biber
     # Security
     keepass
+    # Python
+    python-pip
+    python-virtualenv
+    python-pipenv
     # Desktop applications
     firefox
     # Fonts
@@ -40,6 +44,10 @@ WANTED_PACKAGES=(
 AUR_PACKAGES=(
     # Dotfiles manager
     yadm-git
+)
+PIP_PACKAGES=(
+    # To use template files with yadm
+    envtpl
 )
 
 # Paths for which a dedicated folder in the root volume should be created
@@ -537,10 +545,14 @@ run rm -rf archlinux-pkgbuilds
 comment "Add additional packages from AUR"
 run sudo -u "$NEW_USER" yaourt --noconfirm --sync "${AUR_PACKAGES[@]}"
 
+comment "Add additional packages from PIP"
+run pip install --disable-pip-version-check "${AUR_PACKAGES[@]}"
+
 comment "Install my dotfiles"
 echo -n "https://<...>/dotfiles.git: "
 read HOST_USER
 run sudo -u "$NEW_USER" yadm clone "https://$HOST_USER/dotfiles.git"
+comment "Configure local yadm class as 'home'"
 run sudo -u "$NEW_USER" yadm config local.class home
 
 #<<<<PART-3
