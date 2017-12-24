@@ -191,16 +191,16 @@ run ls --ignore='*' /sys/firmware/efi/efivars
 comment "Test internet connection"
 run ping -c 2 archlinux.org
 
-if $IS_REALBOX
+comment "Install reflector tool and rate best download mirrors"
+run pacman --noconfirm --sync --refresh --needed reflector
+# Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
+run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+if $IS_VIRTUALBOX
 then
-    comment "Install reflector tool and rate best download mirrors"
-    run pacman --noconfirm --sync --refresh --needed reflector
-    # Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
-    run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
-else
     comment "Set mirror to host"
     HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
-    echo "Server = http://$HOST_IP:8080/" > /etc/pacman.d/mirrorlist
+    ( echo "Server = http://$HOST_IP:8080/"; cat /etc/pacman.d/mirrorlist ) > /etc/pacman.d/mirrorlist.tmp
+    mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
 fi
 
 comment "Update clock"
@@ -340,16 +340,16 @@ exit 0
 
 comment "Running second part of setup inside chroot"
 
-if $IS_REALBOX
+comment "Install reflector tool and rate best download mirrors"
+run pacman --noconfirm --sync --refresh --needed reflector
+# Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
+run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+if $IS_VIRTUALBOX
 then
-    comment "Install reflector tool and rate best download mirrors"
-    run pacman --noconfirm --sync --refresh --needed reflector
-    # Get all mirrors in $COUNTRY synchronized not more than 12 hours ago and sort them by download rate
-    run reflector --country "$COUNTRY" --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
-else
     comment "Set mirror to host"
     HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
-    run echo "Server = http://$HOST_IP:8080/" > /etc/pacman.d/mirrorlist
+    ( echo "Server = http://$HOST_IP:8080/"; cat /etc/pacman.d/mirrorlist ) > /etc/pacman.d/mirrorlist.tmp
+    mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
 fi
 
 comment "Patching /etc/mkinitcpio.conf"
