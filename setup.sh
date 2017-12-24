@@ -455,89 +455,107 @@ then
     exec sudo "$0" "$@"
 fi
 
-comment "Install ifplugd to automate network access over ethernet"
-for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
-do
-    comment ">> Device $device netctl profile"
-    run sed 's/^\(Interface=\)\S*/\1'"$device"'/' /etc/netctl/examples/ethernet-dhcp > "/etc/netctl/$device-dhcp"
-    run netctl start "$device-dhcp"
-done
-while ! ping -c 2 archlinux.org
-do
-    sleep 1
-done
-run pacman --noconfirm --sync --refresh --needed ifplugd
-for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
-do
-    run netctl stop "$device-dhcp"
-    comment ">> Device $device ifplugd services"
-    run systemctl enable "netctl-ifplugd@$device"
-    run systemctl start "netctl-ifplugd@$device"
-done
+# TODO: First make internet connection work -- for this maybe we also need wifi before?
 
-comment "Install snapper and set up BTRFS snapshots"
-run pacman --noconfirm --sync --needed snapper snap-pac
+if ! ping -c 1 archlinux.org
+then
+    comment "Install ifplugd to automate network access over ethernet"
+    for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
+    do
+        comment ">> Device $device netctl profile"
+        run sed 's/^\(Interface=\)\S*/\1'"$device"'/' /etc/netctl/examples/ethernet-dhcp > "/etc/netctl/$device-dhcp"
+        run netctl start "$device-dhcp"
+    done
+    while ! ping -c 2 archlinux.org
+    do
+        sleep 1
+    done
+    run pacman --noconfirm --sync --refresh --needed ifplugd
+    for device in $(find /sys/class/net -iname 'en*' -exec basename '{}' ';')
+    do
+        run netctl stop "$device-dhcp"
+        comment ">> Device $device ifplugd services"
+        run systemctl enable "netctl-ifplugd@$device"
+        run systemctl start "netctl-ifplugd@$device"
+    done
+fi
 
-for BTRFS_SUBVOLUME in "${SNAPPER_SUBVOLUMES[@]}"
-do
-    BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME")"
-    BTRFS_SUBVOLUME_SNAPSHOT_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME/.snapshots")"
-    if contains-element "$BTRFS_SUBVOLUME" "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
-    then
-        run umount "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
-        run rmdir "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
-    fi
-    if [[ "$BTRFS_SUBVOLUME" == "/" ]]
-    then
-        CONFIG=root
-    else
-        CONFIG="${BTRFS_SUBVOLUME#/}"
-        CONFIG="${CONFIG//\//-}"
-    fi
-    run snapper --config "$CONFIG" create-config "$BTRFS_SUBVOLUME_PATH"
-    if contains-element "$BTRFS_SUBVOLUME" "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
-    then
-        run mount "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
-    fi
-done
+if ! pacman -Qi snapper
+then
+    comment "Install snapper and set up BTRFS snapshots"
+    run pacman --noconfirm --sync --needed snapper snap-pac
 
-run systemctl enable snapper-timeline.timer
+    for BTRFS_SUBVOLUME in "${SNAPPER_SUBVOLUMES[@]}"
+    do
+        BTRFS_SUBVOLUME_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME")"
+        BTRFS_SUBVOLUME_SNAPSHOT_PATH="$(realpath --canonicalize-missing "$BTRFS_SUBVOLUME/.snapshots")"
+        if contains-element "$BTRFS_SUBVOLUME" "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
+        then
+            run umount "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
+            run rmdir "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
+        fi
+        if [[ "$BTRFS_SUBVOLUME" == "/" ]]
+        then
+            CONFIG=root
+        else
+            CONFIG="${BTRFS_SUBVOLUME#/}"
+            CONFIG="${CONFIG//\//-}"
+        fi
+        run snapper --config "$CONFIG" create-config "$BTRFS_SUBVOLUME_PATH"
+        if contains-element "$BTRFS_SUBVOLUME" "${BTRFS_MOUNTED_SUBVOLUMES[@]}"
+        then
+            run mount "${BTRFS_SUBVOLUME_SNAPSHOT_PATH}"
+        fi
+    done
+
+    run systemctl enable snapper-timeline.timer
+fi
 
 comment "Install graphical user interface"
 run pacman --noconfirm --sync "${GUI_PACKAGES[@]}"
 
 comment "Install AUR helper"
 run pacman --noconfirm --sync --needed base-devel git
-run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/package-query.git
-cd package-query
-run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
-cd ..
-run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/yaourt.git
-cd yaourt
-run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
-cd ..
-run rm -rf package-query yaourt
+if ! pacman -Qi package-query
+then
+    run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/package-query.git
+    cd package-query
+    run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
+    cd ..
+    run rm -rf package-query
+fi
+if ! pacman -Qi yaourt
+then
+    run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/yaourt.git
+    cd yaourt
+    run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
+    cd ..
+    run rm -rf yaourt
+fi
 
 comment "Add additional wanted packages"
 run pacman --noconfirm --sync "${WANTED_PACKAGES[@]}"
 
 comment "Install Sublime Text 3"
-if $IS_REALBOX
+if ! grep '\[sublime-text\]' /etc/pacman.conf
 then
-    curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
-    run pacman-key --lsign-key 8A8F901A
-    echo "
-[sublime-text]
-Server = https://download.sublimetext.com/arch/stable/x86_64
-" | tee -a /etc/pacman.conf
-else
-    HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
-    curl "http://$HOST_IP:8080/sublimehq-pub.gpg" | pacman-key --add -
-    run pacman-key --lsign-key 8A8F901A
-    echo "
-[sublime-text]
-Server = http://$HOST_IP:8080/
-" | tee -a /etc/pacman.conf
+    if $IS_REALBOX
+    then
+        curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
+        run pacman-key --lsign-key 8A8F901A
+        echo "
+    [sublime-text]
+    Server = https://download.sublimetext.com/arch/stable/x86_64
+    " | tee -a /etc/pacman.conf
+    else
+        HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
+        curl "http://$HOST_IP:8080/sublimehq-pub.gpg" | pacman-key --add -
+        run pacman-key --lsign-key 8A8F901A
+        echo "
+    [sublime-text]
+    Server = http://$HOST_IP:8080/
+    " | tee -a /etc/pacman.conf
+    fi
 fi
 run pacman --noconfirm --sync --refresh --needed sublime-text
 
