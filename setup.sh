@@ -36,7 +36,7 @@ GUI_PACKAGES=(
     xorg-server  # The x.org server
     rxvt-unicode # A terminal emulator
     polkit       # PolicyKit to be able to interact with the system ad non-root
-    xrandr       # Graphics configurations
+    xorg-xrandr  # Graphics configurations
 )
 # Which packages do we want to install in the beginning?
 WANTED_PACKAGES=(
