@@ -512,7 +512,7 @@ then
 fi
 
 comment "Install graphical user interface"
-run pacman --noconfirm --sync "${GUI_PACKAGES[@]}"
+run pacman --noconfirm --sync --needed "${GUI_PACKAGES[@]}"
 
 comment "Install AUR helper"
 run pacman --noconfirm --sync --needed base-devel git
@@ -534,7 +534,7 @@ then
 fi
 
 comment "Add additional wanted packages"
-run pacman --noconfirm --sync "${WANTED_PACKAGES[@]}"
+run pacman --noconfirm --sync --needed "${WANTED_PACKAGES[@]}"
 
 comment "Install Sublime Text 3"
 if ! grep '\[sublime-text\]' /etc/pacman.conf
