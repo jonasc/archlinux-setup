@@ -567,6 +567,12 @@ do
     run sudo -u "$NEW_USER" chattr +C "$HOME_FOLDER/$DIRECTORY"
 done
 
+comment "Add additional packages from AUR"
+run sudo -u "$NEW_USER" yaourt --noconfirm --sync "${AUR_PACKAGES[@]}"
+
+comment "Add additional packages from PIP"
+run pip install --disable-pip-version-check "${PIP_PACKAGES[@]}"
+
 comment "Install packages from my own package repository"
 run sudo -u "$NEW_USER" git clone https://github.com/jonasc/archlinux-pkgbuilds.git
 cd archlinux-pkgbuilds
@@ -578,12 +584,6 @@ do
 done
 cd ..
 run rm -rf archlinux-pkgbuilds
-
-comment "Add additional packages from AUR"
-run sudo -u "$NEW_USER" yaourt --noconfirm --sync "${AUR_PACKAGES[@]}"
-
-comment "Add additional packages from PIP"
-run pip install --disable-pip-version-check "${PIP_PACKAGES[@]}"
 
 comment "Install my dotfiles"
 echo -n "https://<...>/dotfiles.git: "
