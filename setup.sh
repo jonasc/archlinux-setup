@@ -596,4 +596,3 @@ comment "Set X11 keymap"
 localectl set-x11-keymap "${X11_KEYMAP[@]}"
 
 #<<<<PART-3
-
