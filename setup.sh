@@ -62,6 +62,23 @@ WANTED_PACKAGES=(
     # Desktop applications
     firefox
     # Fonts
+    otf-fira-mono
+    otf-fira-sans
+    otf-font-awesome
+    otf-overpass
+    ttf-gentium
+    ttf-dejavu
+    ttf-droid
+    ttf-liberation
+    ttf-roboto
+    ttf-ubuntu-font-family
+    ttf-linux-libertine
+    noto-fonts
+    noto-fonts-emoji
+    adobe-source-code-pro-fonts
+    adobe-source-sans-pro-fonts
+    adobe-source-serif-pro-fonts
+    terminus-font
 )
 AUR_PACKAGES=(
     # Dotfiles manager
@@ -72,6 +89,8 @@ AUR_PACKAGES=(
     py3status
     cower-git        # Requirement for one py3status module
     i3ipc-python-git # Requirement for one py3status module
+    # Fonts
+    otf-vollkorn
 )
 PIP_PACKAGES=(
     # To use template files with yadm
