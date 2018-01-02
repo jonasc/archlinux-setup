@@ -292,6 +292,7 @@ NODATACOW_USER_DIRECTORIES=(
 PRIVATE_PACKAGES=(
     pacman-cache-cleanup-hook
     reflector-timer-config
+    dnscrypt-systemd-units
 )
 
 if lsusb | grep 'ID 80ee:0021 ' >/dev/null
