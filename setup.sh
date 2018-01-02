@@ -695,6 +695,9 @@ then
     done
 
     run systemctl enable snapper-timeline.timer
+    run systemctl start snapper-timeline.timer
+    run systemctl enable snapper-cleanup.timer
+    run systemctl start snapper-cleanup.timer
 fi
 
 comment "Install graphical user interface"
