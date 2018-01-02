@@ -758,6 +758,9 @@ do
     run sudo -u "$NEW_USER" chattr +C "$HOME_FOLDER/$DIRECTORY"
 done
 
+comment "Fetch needed gpg keys from server"
+run sudo -u "$NEW_USER" gpg --recv-keys 1D1F0DC78F173680
+
 comment "Add additional packages from AUR"
 run sudo -u "$NEW_USER" yaourt --noconfirm --sync --needed "${AUR_PACKAGES[@]}"
 
