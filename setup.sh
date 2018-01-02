@@ -255,6 +255,7 @@ AUR_PACKAGES=(
     otf-vollkorn
     otf-fira-code
     fontawesome.sty
+    powerline-fonts-git
 )
 PIP_PACKAGES=(
     # To use template files with yadm
