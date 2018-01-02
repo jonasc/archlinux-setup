@@ -543,7 +543,7 @@ comment "Patching /etc/mkinitcpio.conf"
 NEW_HOOKS=$(
     sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
         | tr ' ' '\n' \
-        | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^keyboard$/d' \
+        | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^\(keyboard\|keymap\|encrypt\|lvm2\)$/d' \
         | tr '\n' ' '
 )
 # Replace old HOOKS with new ones
