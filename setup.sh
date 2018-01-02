@@ -579,7 +579,7 @@ run ln -sf /usr/share/zoneinfo/"$TIMEZONE" /etc/localtime
 run hwclock --systohc --utc
 
 comment "Uncomment a number of locales, generate locales, and set default language"
-run sed --in-place 's@^#\(\(en_US\|en_GB\|de_DE\|es_ES\|es_NI\)\.UTF-8.*\)@\1@' /etc/locale.gen
+run sed --in-place 's@^#\(\(en_US\|en_GB\|en_DK\|de_DE\|es_ES\|es_NI\)\.UTF-8.*\)@\1@' /etc/locale.gen
 run locale-gen
 comment "Set default language to American English"
 run echo LANG=en_US.UTF-8 >> /etc/locale.conf
