@@ -791,7 +791,7 @@ localectl set-x11-keymap "${X11_KEYMAP[@]}"
 
 comment "Add user to bumblebee group and enable bumblebee daemon"
 run gpasswd -a "$NEW_USER" bumblebee
-run systemctl enable bumblebee.service
+run systemctl enable bumblebeed.service
 
 comment "Configure dnsmasq to use DNSCrypt"
 run sed --in-place 's/^#\(domain-needed\|bogus-priv\|dnssec\|conf-file=.*\|no-resolv\)/\1/' /etc/dnsmasq.conf
