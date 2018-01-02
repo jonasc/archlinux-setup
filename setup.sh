@@ -28,7 +28,7 @@ LV_ROOT_SIZE=(-l 100%FREE)
 # What is the name of the new user?
 NEW_USER=jonas
 GUI_PACKAGES=(
-    i3-wm        # The windows manager
+    i3-wm        # The window manager
     i3status     # Status command
     i3lock       # Lock screen
     dmenu        # Application launcher
@@ -37,30 +37,174 @@ GUI_PACKAGES=(
     rxvt-unicode # A terminal emulator
     polkit       # PolicyKit to be able to interact with the system ad non-root
     xorg-xrandr  # Graphics configurations
+    dunst        # Notification daemon
 )
 # Which packages do we want to install in the beginning?
 WANTED_PACKAGES=(
     # Command line tools
+    at
+    bash-completion
+    convmv
+    dos2unix
+    dialog
     the_silver_searcher
     tree
     htop
     gtop
+    atop
     rsync
     lm_sensors # Requirement for mpd py3status module
+    imagemagick
+    imagemagick-doc
+    inotify-tools
+    iotop
+    lshw
+    lsof
+    mediainfo
+    moreutils
+    mosh
+    mtr
+    ncdu
+    nmap
+    openssh
+    parallel
+    pdfgrep
+    powertop
+    reptyr
+    sshuttle
+    tmux
+    vim
+    vim-spell-de
+    vim-spell-en
+    vim-spell-es
+    w3m
+    wget
+    whois
+    wol
+    xdg-utils
+    xdotool
+    zenity
+    zip
     # Daemons an alike
     syncthing
+    dnscrypt-proxy
+    dnsmasq
     # Publishing
     texlive-most
     biber
+    pdf2djvu
+    minted
+    pandoc
     # Security
     keepass
+    nftables
+    pwgen
     # Python
     python-pip
     python-virtualenv
     python-pipenv
     python-mpd2       # Requirement for mpd py3status module
+    cython
+    ipython
+    # Programming
+    gcc
+    graphviz
+    strace
+    # System maintenance
+    baobab
+    gdmap
+    dstat
+    tlp
+    x86_energy_perf_policy
+    acpi_call
+    tpacpi-bat
+    arandr
+    bumblebee
+    bbswitch
+    mesa
+    nvidia
+    nvidia-utils
+    lib32-nvidia-utils
+    nvidia-settings
+    xf86-video-intel
+    lib32-virtualgl
+    dhcpcd
+    pacgraph
+    pkgfile
+    primus
+    smartmontools
+    testdisk
+    xf86-input-libinput
+    xorg-xinput
+    xorg-xdpyinfo
+    xorg-xdriinfo
+    xorg-xev
+    xorg-xlsatoms
+    xorg-xlsclients
+    xorg-xprop
+    xorg-xvinfo
+    xorg-xwininfo
+    xorg-xlsfonts
+    xorg-xmodmap
+    xorg-xrdb
+    # Backup
+    borg
+    # Audio
+    alsa-utils
+    pulseaudio
+    pulseaudio-alsa
+    pavucontrol
+    pamixer
+    chromaprint
+    mpd
+    ncmpcpp
+    picard
+    # Smartphone
+    android-tools
+    android-udev
     # Desktop applications
     firefox
+    firefox-i18n-de
+    chromium
+    evince
+    geogebra
+    gephi
+    gimp
+    git
+    git-annex
+    inkscape
+    okular
+    openconnect
+    pdfpc
+    pidgin
+    pidgin-libnotify
+    pidgin-otr
+    rdesktop
+    redshift
+    smplayer
+    sxiv
+    thunderbird
+    thunderbird-i18n-de
+    virtualbox
+    virtualbox-guest-iso
+    virtualbox-host-dkms
+    vlc
+    wireshark-gtk
+    zathura
+    zathura-djvu
+    zathura-pdf-mupdf
+    zathura-ps
+    # Misc
+    aspell-de
+    aspell-en
+    aspell-es
+    hunspell-de
+    hunspell-en
+    hunspell-es
+    cups
+    cups-pdf
+    gutenprint
+    macchanger
     # Fonts
     otf-fira-mono
     otf-fira-sans
@@ -85,12 +229,32 @@ AUR_PACKAGES=(
     yadm-git
     # Management
     reflector-timer
+    # Programming
+    git-extras
+    pdftk-bin
     # i3
     py3status
     cower-git        # Requirement for one py3status module
     i3ipc-python-git # Requirement for one py3status module
+    # Misc
+    profile-sync-daemon
+    anything-sync-daemon
+    storebackup
+    nettop
+    tiv
+    djvu2pdf
+    pkg_scripts
+    pkgbuild-introspection-git
+    virtualbox-ext-oracle
+    zotero
+    # Python
+    pycharm-professional
+    dropbox
+    dropbox-cli
     # Fonts
     otf-vollkorn
+    otf-fira-code
+    fontawesome.sty
 )
 PIP_PACKAGES=(
     # To use template files with yadm
@@ -340,7 +504,7 @@ run mkdir -p /mnt/boot/efi
 run mount "${DEVICE}1" /mnt/boot/efi
 
 comment "Run pacstrap"
-run pacstrap /mnt base btrfs-progs efibootmgr grub-efi-x86_64
+run pacstrap /mnt base btrfs-progs efibootmgr grub-efi-x86_64 wpa_actiond wpa_supplicant
 
 comment "Generate /etc/fstab"
 run genfstab -U /mnt >> /mnt/etc/fstab
@@ -426,7 +590,7 @@ read HOSTNAME
 run echo "$HOSTNAME" > /etc/hostname
 
 comment "Update all packages and install some new ones"
-run pacman --noconfirm --sync --sysupgrade --needed sudo zsh polkit
+run pacman --noconfirm --sync --sysupgrade --needed sudo zsh zsh-completions polkit
 
 comment "Create user and add to relevant group"
 run useradd -m -g users -G wheel,rfkill,log -s "$(which zsh)" "$NEW_USER"
@@ -587,7 +751,7 @@ do
 done
 
 comment "Add additional packages from AUR"
-run sudo -u "$NEW_USER" yaourt --noconfirm --sync "${AUR_PACKAGES[@]}"
+run sudo -u "$NEW_USER" yaourt --noconfirm --sync --needed "${AUR_PACKAGES[@]}"
 
 comment "Add additional packages from PIP"
 run pip install --disable-pip-version-check "${PIP_PACKAGES[@]}"
