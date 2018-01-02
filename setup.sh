@@ -784,4 +784,14 @@ run sudo -u "$NEW_USER" yadm config local.class home
 comment "Set X11 keymap"
 localectl set-x11-keymap "${X11_KEYMAP[@]}"
 
+comment "Add user to bumblebee group and enable bumblebee daemon"
+run gpasswd -a "$NEW_USER" bumblebee
+run systemctl enable bumblebee.service
+
+comment "Configure dnsmasq to use DNSCrypt"
+run sed --in-place 's/^#\(domain-needed\|bogus-priv\|dnssec\|conf-file=.*\|no-resolv\)/\1/' /etc/dnsmasq.conf
+run sed --in-place 's/^\(#no-poll\)/\1\n\nserver=127.0.0.1#53531\nserver=127.0.0.1#53532\nserver=127.0.0.1#53533\nserver=127.0.0.1#53534\nserver=127.0.0.1#53535\nserver=127.0.0.1#53536\nserver=127.0.0.1#53537\nserver=127.0.0.1#53538\nserver=127.0.0.1#53539/' /etc/dnsmasq.conf
+run systemctl enable dnsmasq
+run systemctl start dnsmasq
+
 #<<<<PART-3
