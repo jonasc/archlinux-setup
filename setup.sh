@@ -249,7 +249,7 @@ AUR_PACKAGES=(
     virtualbox-ext-oracle
     zotero
     # Python
-    pycharm-professional
+    # pycharm-professional
     dropbox
     dropbox-cli
     # Fonts
