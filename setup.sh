@@ -731,21 +731,13 @@ run pacman --noconfirm --sync --needed "${GUI_PACKAGES[@]}"
 
 comment "Install AUR helper"
 run pacman --noconfirm --sync --needed base-devel git
-if ! pacman -Qi package-query
+if ! pacman -Qi trizen
 then
-    run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/package-query.git
-    cd package-query
+    run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/trizen.git
+    cd trizen
     run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
     cd ..
-    run rm -rf package-query
-fi
-if ! pacman -Qi yaourt
-then
-    run sudo -u "$NEW_USER" git clone https://aur.archlinux.org/yaourt.git
-    cd yaourt
-    run sudo -u "$NEW_USER" makepkg --syncdeps --install --noconfirm
-    cd ..
-    run rm -rf yaourt
+    run rm -rf trizen
 fi
 
 comment "Add additional wanted packages"
@@ -787,7 +779,7 @@ comment "Fetch needed gpg keys from server"
 run sudo -u "$NEW_USER" gpg --recv-keys 1D1F0DC78F173680
 
 comment "Add additional packages from AUR"
-run sudo -u "$NEW_USER" yaourt --noconfirm --sync --needed "${AUR_PACKAGES[@]}"
+run sudo -u "$NEW_USER" trizen --noconfirm --sync --needed "${AUR_PACKAGES[@]}"
 
 comment "Add additional packages from PIP"
 run pip install --disable-pip-version-check "${PIP_PACKAGES[@]}"
