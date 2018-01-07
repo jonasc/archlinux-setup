@@ -728,24 +728,25 @@ comment "Add additional wanted packages"
 run pacman --noconfirm --sync --needed "${WANTED_PACKAGES[@]}"
 
 comment "Install Sublime Text 3"
-if ! grep '\[sublime-text\]' /etc/pacman.conf
+if ! grep 'Include\s*=\s*/etc/pacman\.d/sublime-text' /etc/pacman.conf
 then
+    echo "
+Include = /etc/pacman.d/sublime-text
+" | tee -a /etc/pacman.conf
     if $IS_REALBOX
     then
         curl https://download.sublimetext.com/sublimehq-pub.gpg | pacman-key --add -
         run pacman-key --lsign-key 8A8F901A
-        echo "
-    [sublime-text]
-    Server = https://download.sublimetext.com/arch/stable/x86_64
-    " | tee -a /etc/pacman.conf
+        echo "[sublime-text]
+Server = https://download.sublimetext.com/arch/stable/x86_64
+" | tee /etc/pacman.d/sublime-text
     else
         HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
         curl "http://$HOST_IP:8080/sublimehq-pub.gpg" | pacman-key --add -
         run pacman-key --lsign-key 8A8F901A
-        echo "
-    [sublime-text]
-    Server = http://$HOST_IP:8080/
-    " | tee -a /etc/pacman.conf
+        echo "[sublime-text]
+Server = http://$HOST_IP:8080/
+" | tee /etc/pacman.d/sublime-text
     fi
 fi
 run pacman --noconfirm --sync --refresh --needed sublime-text
