@@ -73,6 +73,7 @@ WANTED_PACKAGES=(
     reptyr
     sshuttle
     tmux
+    vifm
     vim
     vim-spell-de
     vim-spell-en
