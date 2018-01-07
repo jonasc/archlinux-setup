@@ -124,10 +124,10 @@ WANTED_PACKAGES=(
     mesa
     nvidia
     nvidia-utils
-    lib32-nvidia-utils
+    # lib32-nvidia-utils
     nvidia-settings
     xf86-video-intel
-    lib32-virtualgl
+    # lib32-virtualgl
     dhcpcd
     pacgraph
     pkgfile
