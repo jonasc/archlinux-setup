@@ -537,6 +537,29 @@ then
     mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
 fi
 
+comment "Install linux kernel with ck-patches"
+if ! grep 'Include\s*=\s*/etc/pacman\.d/repo-ck' /etc/pacman.conf
+then
+    echo "
+Include = /etc/pacman.d/repo-ck
+" | tee -a /etc/pacman.conf
+    comment "Receive and sign pacman keys"
+    run pacman-key --recv-keys 5EE46C4C
+    run pacman-key --lsign-key 5EE46C4C
+    if $IS_REALBOX
+    then
+        echo "[repo-ck]
+Server = http://repo-ck.com/$arch
+" | tee /etc/pacman.d/repo-ck
+    else
+        HOST_IP=$(ip route | sed --silent 's/.*via \(\S\+\).*/\1/p')
+        echo "[repo-ck]
+Server = http://$HOST_IP:8080/
+" | tee /etc/pacman.d/repo-ck
+    fi
+fi
+run pacman --noconfirm --sync --refresh --refresh --needed linux-ck-ivybridge linux-ck-ivybridge-headers nvidia-ck-ivybridge
+
 comment "Patching /etc/mkinitcpio.conf"
 # Add/move "keyboard" and "keymap" before "block"
 # Add "encrypt" and "lvm2" before "filesystems"
