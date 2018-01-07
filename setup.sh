@@ -537,6 +537,19 @@ then
     mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
 fi
 
+comment "Patching /etc/mkinitcpio.conf"
+# Add/move "keyboard" and "keymap" before "block"
+# Add "encrypt" and "lvm2" before "filesystems"
+NEW_HOOKS=$(
+    sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
+        | tr ' ' '\n' \
+        | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^\(keyboard\|keymap\|encrypt\|lvm2\)$/d' \
+        | tr '\n' ' '
+)
+# Replace old HOOKS with new ones
+# Add btrfs binary to BINARIES to be able to make file system operations before booting
+run sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
+
 comment "Install linux kernel with ck-patches"
 if ! grep 'Include\s*=\s*/etc/pacman\.d/repo-ck' /etc/pacman.conf
 then
@@ -559,19 +572,6 @@ Server = http://$HOST_IP:8080/
     fi
 fi
 run pacman --noconfirm --sync --refresh --refresh --needed linux-ck-ivybridge linux-ck-ivybridge-headers nvidia-ck-ivybridge
-
-comment "Patching /etc/mkinitcpio.conf"
-# Add/move "keyboard" and "keymap" before "block"
-# Add "encrypt" and "lvm2" before "filesystems"
-NEW_HOOKS=$(
-    sed --silent 's/^HOOKS=(\([^)]\+\))/\1/p' /etc/mkinitcpio.conf \
-        | tr ' ' '\n' \
-        | sed 's/^\(block\)$/keyboard\nkeymap\n\1/;s/^\(filesystems\)$/encrypt\nlvm2\n\1/;/^\(keyboard\|keymap\|encrypt\|lvm2\)$/d' \
-        | tr '\n' ' '
-)
-# Replace old HOOKS with new ones
-# Add btrfs binary to BINARIES to be able to make file system operations before booting
-run sed --in-place 's/^\(HOOKS=(\)[^)]\+/\1'"$NEW_HOOKS"'/;s/^\(BINARIES=(\))/\1\/usr\/bin\/btrfs)/' /etc/mkinitcpio.conf
 
 comment "Find uuid of installation disk"
 DISK_ID=$(blkid --output export "${DEVICE}2" | sed --silent 's/^UUID=//p')
