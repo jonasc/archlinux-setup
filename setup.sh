@@ -506,7 +506,7 @@ run mkdir -p /mnt/boot/efi
 run mount "${DEVICE}1" /mnt/boot/efi
 
 comment "Run pacstrap"
-run pacstrap /mnt base btrfs-progs efibootmgr grub-efi-x86_64 wpa_actiond wpa_supplicant
+run pacstrap /mnt base btrfs-progs efibootmgr grub-efi-x86_64 wpa_actiond wpa_supplicant linux-headers
 
 comment "Generate /etc/fstab"
 run genfstab -U /mnt >> /mnt/etc/fstab
