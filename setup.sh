@@ -14,7 +14,7 @@ TIMEZONE=Europe/Berlin
 # Where to install Arch
 DEVICE=/dev/sda
 # Size of EFI partition
-EFI_PARTITION_SIZE=250M
+EFI_PARTITION_SIZE=1G
 # What should the cryptdevice be called?
 CRYPTSETUP_NAME=cryptoroot
 # What should be the name of the volume group?
