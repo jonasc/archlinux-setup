@@ -31,7 +31,7 @@ GUI_PACKAGES=(
     i3-wm        # The window manager
     i3status     # Status command
     i3lock       # Lock screen
-    dmenu        # Application launcher
+    rofi         # Application launcher
     xorg-xinit   # Start x.org session with startx
     xorg-server  # The x.org server
     rxvt-unicode # A terminal emulator
@@ -248,6 +248,7 @@ AUR_PACKAGES=(
     pkgbuild-introspection-git
     virtualbox-ext-oracle
     zotero
+    urxvt-resize-font-git
     # Python
     # pycharm-professional
     dropbox
